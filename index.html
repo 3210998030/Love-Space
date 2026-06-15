@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💕 我们的爱情空间</title>
+<style>
+/* ===== Reset & Base ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;
+  background:linear-gradient(135deg,#fff0f3 0%,#ffe0e6 25%,#ffd6df 50%,#ffc0cb 75%,#ffb6c1 100%);
+  background-attachment:fixed;
+  color:#c0392b;min-height:100vh;overflow-x:hidden;
+}
+/* will-change hint for compositor-only animations */
+.heart-float{will-change:transform,opacity}
+
+/* Floating Hearts - GPU accelerated via transform only */
+.hearts-container{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;overflow:hidden;
+  contain:strict;
+}
+.heart-float{
+  position:absolute;bottom:-60px;
+  animation:floatUp linear infinite;
+  opacity:.3;font-size:22px;
+}
+@keyframes floatUp{
+  0%{transform:translateY(0) rotate(0deg) scale(.4);opacity:.5}
+  50%{transform:translateY(-45vh) rotate(180deg) scale(1);opacity:.25}
+  100%{transform:translateY(-105vh) rotate(360deg) scale(.25);opacity:0}
+}
+
+/* Main Container */
+.main-container{
+  position:relative;z-index:1;
+  max-width:1100px;margin:0 auto;padding:20px;
+}
+
+/* Header */
+.header{text-align:center;padding:48px 20px 26px}
+.header h1{
+  font-size:clamp(26px,5vw,46px);
+  background:linear-gradient(135deg,#ff4d6d,#e63946,#d00000);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;
+  animation:titleGlow 3s ease-in-out infinite alternate;
+  will-change:filter;
+}
+@keyframes titleGlow{
+  from{filter:drop-shadow(0 0 4px rgba(255,77,109,.3))}
+  to{filter:drop-shadow(0 0 12px rgba(230,57,70,.6))}
+}
+.header .subtitle{font-size:clamp(13px,2vw,17px);color:#e63946;letter-spacing:3px}
+.header .couple-names{
+  display:inline-flex;align-items:center;gap:10px;
+  margin-top:10px;font-size:19px;color:#d00000;font-weight:bold;
+}
+.heart-icon{font-size:26px;animation:heartbeat 1.2s ease-in-out infinite;will-change:transform}
+@keyframes heartbeat{
+  0%,100%{transform:scale(1)}
+  15%{transform:scale(1.2)}
+  30%{transform:scale(1)}
+  45%{transform:scale(1.15)}
+  60%{transform:scale(1)}
+}
+
+/* Section Cards - content-visibility for off-screen */
+.section{
+  background:rgba(255,255,255,.68);
+  backdrop-filter:blur(10px);
+  border:2px solid #ffb3c1;
+  border-radius:18px;padding:26px 22px;margin-bottom:24px;
+  box-shadow:0 6px 24px rgba(230,57,70,.1);
+  animation:fadeInUp .5s ease both;
+  contain:layout style;
+}
+.section:nth-child(2){animation-delay:.08s}
+.section:nth-child(3){animation-delay:.2s}
+.section:nth-child(4){animation-delay:.32s}
+@keyframes fadeInUp{
+  from{opacity:0;transform:translateY(24px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.section-title{
+  font-size:clamp(18px,2.5vw,24px);color:#d00000;
+  border-bottom:3px dashed #ffb3c1;padding-bottom:10px;margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;
+}
+
+/* ===== Photo Grid ===== */
+.photo-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+  gap:14px;
+  contain:layout style;
+}
+.photo-item{
+  position:relative;border-radius:12px;overflow:hidden;cursor:pointer;
+  aspect-ratio:1;border:3px solid #ffb3c1;
+  transition:transform .3s cubic-bezier(.4,0,.2,1),border-color .3s,box-shadow .3s;
+  box-shadow:0 3px 12px rgba(230,57,70,.12);
+  background:#ffe0e6;
+  will-change:transform;
+  contain:layout style paint;
+}
+.photo-item:hover{
+  transform:translateY(-5px) scale(1.03);
+  border-color:#ff4d6d;
+  box-shadow:0 10px 26px rgba(230,57,70,.28);
+}
+.photo-item img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.photo-item .photo-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(230,57,70,.45),transparent);
+  opacity:0;transition:opacity .25s;
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;
+}
+.photo-item:hover .photo-overlay{opacity:1}
+.photo-overlay span{color:#fff;font-size:13px;letter-spacing:1px}
+.photo-delete{
+  position:absolute;top:7px;right:7px;width:26px;height:26px;border-radius:50%;
+  background:rgba(230,57,70,.78);color:#fff;border:none;
+  font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .25s;z-index:2;
+}
+.photo-item:hover .photo-delete{opacity:1}
+.photo-delete:hover{background:#d00000}
+
+/* Upload Area */
+.upload-area{
+  border:3px dashed #ff4d6d;border-radius:12px;padding:24px;
+  text-align:center;cursor:pointer;
+  transition:all .25s;background:rgba(255,183,193,.18);
+  margin-bottom:18px;
+}
+.upload-area:hover,.upload-area.drag-over{
+  background:rgba(255,77,109,.12);border-color:#e63946;transform:scale(1.008);
+}
+.upload-icon{font-size:42px;color:#ff4d6d;margin-bottom:6px}
+.upload-area p{color:#e63946;font-size:14px}
+.upload-hint{font-size:11px;color:#ff8fa3;margin-top:3px}
+#photoInput{display:none}
+
+/* Load More Button */
+.load-more-wrap{text-align:center;margin-top:16px}
+.btn-outline{
+  padding:10px 30px;border:2px solid #ff4d6d;border-radius:22px;
+  background:transparent;color:#e63946;font-size:14px;cursor:pointer;
+  font-weight:bold;letter-spacing:1px;
+  transition:all .25s;font-family:inherit;
+}
+.btn-outline:hover{background:#ff4d6d;color:#fff;box-shadow:0 4px 14px rgba(230,57,70,.3)}
+
+/* Lightbox */
+.lightbox{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(170,30,48,.94);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.lightbox.active{opacity:1;pointer-events:auto}
+.lightbox img{
+  max-width:90vw;max-height:82vh;border-radius:14px;
+  border:4px solid #ffb3c1;
+  box-shadow:0 0 50px rgba(255,77,109,.45);
+  transform:scale(.88);transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+.lightbox.active img{transform:scale(1)}
+.lightbox-close{
+  position:absolute;top:16px;right:22px;font-size:36px;color:#ffb3c1;
+  cursor:pointer;transition:all .25s;z-index:1001;
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.2);border-radius:50%;
+}
+.lightbox-close:hover{color:#fff;transform:rotate(90deg);background:rgba(0,0,0,.4)}
+.lightbox-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  font-size:32px;color:#ffb3c1;cursor:pointer;transition:all .25s;z-index:1001;
+  width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.2);border-radius:50%;
+}
+.lightbox-nav:hover{color:#fff;background:rgba(0,0,0,.4)}
+.lightbox-prev{left:14px}.lightbox-next{right:14px}
+
+/* Diary Form */
+.diary-form{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.diary-form .form-row{display:flex;gap:10px;flex-wrap:wrap}
+.diary-form input[type="date"]{
+  flex:0 0 170px;padding:11px 14px;border:2px solid #ffb3c1;
+  border-radius:10px;font-size:14px;color:#c0392b;background:#fff5f7;
+  outline:none;transition:border-color .25s;font-family:inherit;
+}
+.diary-form input[type="date"]:focus{border-color:#ff4d6d}
+.diary-form textarea{
+  width:100%;min-height:90px;padding:12px 14px;border:2px solid #ffb3c1;
+  border-radius:10px;font-size:14px;color:#c0392b;background:#fff5f7;
+  resize:vertical;outline:none;transition:border-color .25s;
+  font-family:inherit;line-height:1.6;
+}
+.diary-form textarea:focus{border-color:#ff4d6d}
+.diary-form textarea::placeholder{color:#ff8fa3}
+.btn{
+  padding:11px 26px;border:none;border-radius:22px;
+  font-size:15px;cursor:pointer;font-weight:bold;letter-spacing:1px;
+  transition:all .25s cubic-bezier(.4,0,.2,1);font-family:inherit;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#ff4d6d,#e63946);color:#fff;
+  box-shadow:0 3px 12px rgba(230,57,70,.35);align-self:flex-start;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(230,57,70,.5)}
+.btn-primary:active{transform:scale(.97)}
+
+/* Timeline */
+.timeline{position:relative;padding-left:30px}
+.timeline::before{
+  content:'';position:absolute;left:9px;top:0;bottom:0;
+  width:3px;background:linear-gradient(to bottom,#ff4d6d,#ffb3c1,#ff4d6d);border-radius:2px;
+}
+.timeline-item{
+  position:relative;
+  background:linear-gradient(135deg,#fff5f7,#ffe0e6);
+  border:2px solid #ffb3c1;border-radius:12px;padding:14px 18px;
+  margin-bottom:16px;transition:all .25s;
+  animation:fadeInUp .35s ease both;
+  contain:layout style;
+}
+.timeline-item:hover{transform:translateX(5px);border-color:#ff4d6d;box-shadow:0 5px 16px rgba(230,57,70,.18)}
+.timeline-item::before{
+  content:'💕';position:absolute;left:-42px;top:16px;font-size:16px;
+  background:#ffe0e6;border-radius:50%;
+  width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  border:2px solid #ff4d6d;
+}
+.timeline-date{font-size:12px;color:#ff4d6d;font-weight:bold;margin-bottom:6px;letter-spacing:1px}
+.timeline-content{font-size:14px;color:#c0392b;line-height:1.65;word-break:break-word}
+.timeline-delete{
+  position:absolute;top:10px;right:12px;background:none;border:none;
+  color:#ff8fa3;cursor:pointer;font-size:16px;transition:all .25s;
+}
+.timeline-delete:hover{color:#e63946;transform:scale(1.2)}
+.empty-state{text-align:center;color:#ff8fa3;padding:26px;font-size:14px;letter-spacing:1px}
+
+/* Love Counter */
+.love-counter{
+  text-align:center;padding:18px;
+  background:linear-gradient(135deg,rgba(255,77,109,.08),rgba(255,183,193,.16));
+  border-radius:14px;border:2px solid #ffb3c1;margin-bottom:24px;
+}
+.love-counter .days-num{
+  font-size:44px;font-weight:bold;
+  background:linear-gradient(135deg,#ff4d6d,#d00000);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  cursor:pointer;
+}
+.love-counter .days-label{font-size:13px;color:#e63946;letter-spacing:2px}
+
+/* Footer */
+.footer{text-align:center;padding:24px 16px;color:#e63946;font-size:12px;letter-spacing:2px;opacity:.75}
+
+/* Toast */
+.toast{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#ff4d6d,#e63946);color:#fff;
+  padding:10px 24px;border-radius:22px;font-size:13px;
+  z-index:2000;opacity:0;pointer-events:none;
+  transition:all .35s;box-shadow:0 5px 20px rgba(230,57,70,.35);letter-spacing:1px;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(8px)}
+
+/* Music Button */
+.music-btn{
+  position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,#ff4d6d,#e63946);color:#fff;
+  border:3px solid #ffb3c1;font-size:20px;cursor:pointer;
+  box-shadow:0 3px 16px rgba(230,57,70,.35);transition:all .25s;
+  z-index:100;display:flex;align-items:center;justify-content:center;
+}
+.music-btn:hover{transform:scale(1.08)}
+.music-btn.playing{animation:musicSpin 3s linear infinite}
+@keyframes musicSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* ===== Responsive ===== */
+@media(max-width:768px){
+  .main-container{padding:10px}
+  .section{padding:18px 14px;border-radius:14px}
+  .photo-grid{grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px}
+  .header{padding:30px 14px 18px}
+  .diary-form input[type="date"]{flex:1 1 100%}
+  .btn-primary{width:100%;text-align:center}
+  .lightbox-nav{width:38px;height:38px;font-size:26px}
+  .lightbox-prev{left:6px}.lightbox-next{right:6px}
+  .lightbox-close{top:10px;right:10px;width:38px;height:38px;font-size:30px}
+  .timeline{padding-left:26px}
+  .timeline::before{left:7px}
+  .timeline-item::before{left:-37px;width:22px;height:22px;font-size:13px}
+}
+@media(max-width:480px){
+  .photo-grid{grid-template-columns:repeat(2,1fr);gap:7px}
+  .photo-item{border-radius:9px;border-width:2px}
+  .header h1{font-size:22px}
+  .section-title{font-size:17px}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:7px}
+::-webkit-scrollbar-track{background:#ffe0e6}
+::-webkit-scrollbar-thumb{background:#ffb3c1;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#ff4d6d}
+</style>
+</head>
+<body>
+
+<div class="hearts-container" id="heartsContainer"></div>
+<div class="toast" id="toast"></div>
+
+<div class="main-container">
+  <header class="header">
+    <h1>💖 我们的爱情空间 💖</h1>
+    <p class="subtitle">—— 记录属于我们的每一刻 ——</p>
+    <div class="couple-names">
+      <span>👦 刘园丁</span><span class="heart-icon">💕</span><span>田佳 👧</span>
+    </div>
+  </header>
+
+  <div class="love-counter">
+    <div class="days-num" id="loveDays" title="点击设置恋爱开始日期">0</div>
+    <div class="days-label">💗 我们已经相爱了这么多天 💗</div>
+  </div>
+
+  <!-- Photo Section -->
+  <div class="section">
+    <h2 class="section-title">📸 我们的照片墙</h2>
+    <div class="upload-area" id="uploadArea">
+      <div class="upload-icon">📷</div>
+      <p>点击上传照片 或 拖拽照片到此处</p>
+      <p class="upload-hint">支持 JPG / PNG / WebP，多图可选</p>
+      <input type="file" id="photoInput" accept="image/*" multiple>
+    </div>
+    <div class="photo-grid" id="photoGrid"></div>
+    <div class="load-more-wrap" id="loadMoreWrap" style="display:none">
+      <button class="btn-outline" id="loadMoreBtn">📷 加载更多照片</button>
+    </div>
+  </div>
+
+  <!-- Diary Section -->
+  <div class="section">
+    <h2 class="section-title">📖 恋爱日记</h2>
+    <div class="diary-form">
+      <div class="form-row"><input type="date" id="diaryDate" required></div>
+      <textarea id="diaryContent" placeholder="写下今天的心情、想对TA说的话...&#10;按 Ctrl+Enter 快速提交" required></textarea>
+      <button class="btn btn-primary" id="diarySubmit">💌 记录这一刻</button>
+    </div>
+    <div class="timeline" id="timeline"></div>
+    <div class="load-more-wrap" id="diaryLoadMoreWrap" style="display:none">
+      <button class="btn-outline" id="diaryLoadMoreBtn">📖 加载更多日记</button>
+    </div>
+  </div>
+
+  <footer class="footer"><p>💕 愿得一人心，白首不相离 💕</p></footer>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <span class="lightbox-close" id="lightboxClose">&times;</span>
+  <span class="lightbox-nav lightbox-prev" id="lightboxPrev">&#10094;</span>
+  <img src="" alt="预览" id="lightboxImg">
+  <span class="lightbox-nav lightbox-next" id="lightboxNext">&#10095;</span>
+</div>
+
+<button class="music-btn" id="musicBtn" title="播放音乐">🎵</button>
+
+<script>
+(function(){
+'use strict';
+
+/* ========== Constants ========== */
+const PHOTO_PAGE_SIZE = 16;
+const DIARY_PAGE_SIZE = 8;
+const STORAGE_KEY_PHOTOS = 'love_space_photos';
+const STORAGE_KEY_DIARIES = 'love_space_diaries';
+const STORAGE_KEY_START = 'love_space_start_date';
+
+/* ========== Helpers ========== */
+const $ = (sel, ctx) => (ctx||document).querySelector(sel);
+const $$ = (sel, ctx) => [...(ctx||document).querySelectorAll(sel)];
+const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+
+/* ========== Debounce / Throttle ========== */
+function debounce(fn, ms) {
+  let t;
+  return function(...args) {
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+/* ========== Data Layer ========== */
+let allPhotos = [];
+let allDiaries = [];
+let loveStartDate = '';
+
+function loadData(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || []; }
+  catch(e) { return []; }
+}
+function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+
+function loadAllPhotos() { allPhotos = loadData(STORAGE_KEY_PHOTOS); }
+function saveAllPhotos() { saveData(STORAGE_KEY_PHOTOS, allPhotos); }
+function loadAllDiaries() { allDiaries = loadData(STORAGE_KEY_DIARIES); }
+function saveAllDiaries() { saveData(STORAGE_KEY_DIARIES, allDiaries); }
+
+function initLoveDate() {
+  loveStartDate = localStorage.getItem(STORAGE_KEY_START);
+  if (!loveStartDate) {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 1);
+    loveStartDate = d.toISOString().split('T')[0];
+    localStorage.setItem(STORAGE_KEY_START, loveStartDate);
+  }
+}
+
+/* ========== Preload Existing Photos (metadata only, no DOM) ========== */
+function preloadExistingPhotos() {
+  if (allPhotos.length > 0) return;
+  const files = [
+    'img/IMG_20250828_175355.jpg','img/IMG_20250902_104203.jpg','img/IMG_20250902_104210.jpg',
+    'img/IMG_20250913_025815.jpg','img/IMG_20250916_020524.jpg','img/IMG_20250916_053823.jpg',
+    'img/IMG_20250921_234438.jpg','img/IMG_20251010_121040.jpg','img/IMG_20251010_121045.jpg',
+    'img/IMG_20251010_121102.jpg','img/IMG_20251024_210204.jpg','img/IMG_20251024_210234.jpg',
+    'img/IMG_20251024_210316.jpg','img/IMG_20251024_210354.jpg','img/IMG_20251029_214622.jpg',
+    'img/IMG_20251111_190723.jpg','img/IMG_20251115_093622.jpg','img/IMG_20251120_220709.jpg',
+    'img/IMG_20251120_220712.jpg','img/IMG_20251129_214843.jpg','img/IMG_20251129_220444.jpg',
+    'img/IMG_20251204_205725.jpg','img/IMG_20251215_023119.jpg','img/IMG_20251230_165423.jpg',
+    'img/IMG_20260201_231900.jpg','img/IMG_20260319_192827.jpg','img/IMG_20260319_192911.jpg',
+    'img/IMG_20260319_192913.jpg','img/IMG_20260323_111102.jpg','img/IMG_20260411_204454.jpg',
+    'img/IMG_20260411_204535.jpg','img/IMG_20260414_023330.jpg','img/IMG_20260414_023437.jpg',
+    'img/IMG_20260414_023505.jpg','img/IMG_20260415_180354.jpg','img/IMG_20260423_105301.jpg',
+    'img/IMG_20260423_144908.jpg','img/IMG_20260424_212422.jpg',
+    'img/MVIMG_20260112_090746.jpg','img/MVIMG_20260115_141613.jpg',
+    'img/MVIMG_20260118_211233.jpg','img/MVIMG_20260127_053121.jpg',
+    'img/MVIMG_20260201_002248.jpg','img/MVIMG_20260201_002255.jpg',
+    'img/MVIMG_20260212_222025.jpg','img/MVIMG_20260228_174531.jpg',
+    'img/MVIMG_20260304_211344.jpg','img/MVIMG_20260319_192655.jpg',
+    'img/MVIMG_20260425_173523.jpg','img/MVIMG_20260427_194655.jpg',
+    'img/MVIMG_20260430_164741.jpg','img/MVIMG_20260505_085831.jpg',
+    'img/MVIMG_20260609_121621.jpg','img/MVIMG_20260609_121625.jpg',
+    'img/MVIMG_20260609_121636.jpg','img/MVIMG_20260609_121650.jpg',
+    'img/MVIMG_20260609_121953.jpg','img/MVIMG_20260609_122016.jpg',
+    'img/MVIMG_20260609_122228.jpg','img/MVIMG_20260609_122401.jpg',
+    'img/MVIMG_20260609_122554.jpg','img/MVIMG_20260609_122844.jpg',
+    'img/MVIMG_20260609_122857.jpg',
+    'img/synthesis_6a5f5136-b983-4457-b5e1-21df8fae63e8_image_save_local1766597810806.jpg',
+    'img/synthesis_bcf89a4f-cc77-4ba7-b4f0-16d5e3f1b032_image_save_local1766597831152.jpg'
+  ];
+  const now = new Date().toISOString();
+  allPhotos = files.map(src => ({ id: genId(), src, date: now }));
+  saveAllPhotos();
+}
+
+function preloadDemoDiaries() {
+  if (allDiaries.length > 0) return;
+  const demos = [
+    { date: '2025-08-28', content: '今天是我们第一次相遇的日子，你笑起来真好看 😊' },
+    { date: '2025-10-01', content: '一起看了国庆烟花，牵着你的手，希望时间定格在这一刻 💕' },
+    { date: '2025-12-25', content: '圣诞快乐！偷偷给你准备了礼物，看你拆开时开心的样子，我也好幸福 🎄' },
+    { date: '2026-01-01', content: '新年快乐！新的一年，还要和你在一起度过每一天 🌟' },
+    { date: '2026-02-14', content: '情人节快乐！你就是我最好的礼物 💝' },
+  ];
+  allDiaries = demos.map((d, i) => ({
+    id: genId(),
+    date: d.date,
+    content: d.content,
+    createdAt: new Date(Date.now() - (5 - i) * 86400000).toISOString()
+  }));
+  saveAllDiaries();
+}
+
+/* ========== Photo Rendering (Paginated) ========== */
+let photoRendered = 0;
+
+function renderPhotoPage(reset) {
+  if (reset) photoRendered = 0;
+  const grid = $('#photoGrid');
+  if (!grid) return;
+
+  const slice = allPhotos.slice(photoRendered, photoRendered + PHOTO_PAGE_SIZE);
+
+  if (reset) {
+    grid.textContent = ''; // faster than innerHTML = ''
+  }
+
+  if (slice.length === 0 && photoRendered === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">📷 还没有照片，快来上传你们的甜蜜瞬间吧~</div>';
+    $('#loadMoreWrap').style.display = 'none';
+    return;
+  }
+
+  // Build fragment for batch DOM insert
+  const frag = document.createDocumentFragment();
+  slice.forEach((p, i) => {
+    const idx = photoRendered + i;
+    const item = document.createElement('div');
+    item.className = 'photo-item';
+    item.setAttribute('data-index', idx);
+    item.innerHTML =
+      `<img src="${p.src}" alt="照片" loading="lazy" decoding="async">` +
+      `<button class="photo-delete" data-action="delete" data-id="${p.id}" title="删除">✕</button>` +
+      `<div class="photo-overlay"><span>💗 点击查看</span></div>`;
+    frag.appendChild(item);
+  });
+
+  grid.appendChild(frag);
+  photoRendered += slice.length;
+
+  // Show/hide load more
+  const wrap = $('#loadMoreWrap');
+  if (photoRendered < allPhotos.length) {
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+/* Use event delegation for photo grid - single listener! */
+function onPhotoGridClick(e) {
+  const item = e.target.closest('.photo-item');
+  if (!item) return;
+
+  // Delete button
+  const delBtn = e.target.closest('[data-action="delete"]');
+  if (delBtn) {
+    e.stopPropagation();
+    const id = delBtn.getAttribute('data-id');
+    const before = allPhotos.length;
+    allPhotos = allPhotos.filter(p => p.id !== id);
+    saveAllPhotos();
+    // Re-render from scratch to keep indices in sync
+    photoRendered = 0;
+    renderPhotoPage(true);
+    showToast('照片已删除');
+    return;
+  }
+
+  // Open lightbox
+  const idx = parseInt(item.getAttribute('data-index'));
+  openLightbox(idx);
+}
+
+/* ========== Lightbox ========== */
+let currentLightboxIndex = -1;
+
+function openLightbox(index) {
+  if (allPhotos.length === 0) return;
+  currentLightboxIndex = index;
+  $('#lightboxImg').src = allPhotos[index].src;
+  $('#lightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  $('#lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+  currentLightboxIndex = -1;
+  // Release image memory
+  $('#lightboxImg').src = '';
+}
+
+function lightboxNav(delta) {
+  if (allPhotos.length === 0) return;
+  currentLightboxIndex = (currentLightboxIndex + delta + allPhotos.length) % allPhotos.length;
+  $('#lightboxImg').src = allPhotos[currentLightboxIndex].src;
+}
+
+/* ========== Upload Photos ========== */
+function handlePhotoUpload(files) {
+  if (!files || files.length === 0) return;
+  let loaded = 0;
+  const total = Array.from(files).filter(f => f.type.startsWith('image/')).length;
+  if (total === 0) return;
+
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      allPhotos.unshift({ id: genId(), src: e.target.result, date: new Date().toISOString() });
+      loaded++;
+      if (loaded === total) {
+        saveAllPhotos();
+        renderPhotoPage(true);
+        showToast(`成功上传 ${loaded} 张照片 💕`);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ========== Diary Rendering (Paginated) ========== */
+let diaryRendered = 0;
+
+function renderDiaryPage(reset) {
+  if (reset) diaryRendered = 0;
+  const timeline = $('#timeline');
+  if (!timeline) return;
+
+  const sorted = [...allDiaries].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const slice = sorted.slice(diaryRendered, diaryRendered + DIARY_PAGE_SIZE);
+
+  if (reset) {
+    timeline.textContent = '';
+  }
+
+  if (slice.length === 0 && diaryRendered === 0) {
+    timeline.innerHTML = '<div class="empty-state">📝 还没有日记，写下你们的第一篇恋爱日记吧~</div>';
+    $('#diaryLoadMoreWrap').style.display = 'none';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  slice.forEach((d, i) => {
+    const div = document.createElement('div');
+    div.className = 'timeline-item';
+    div.style.animationDelay = (i * 0.04) + 's';
+    div.innerHTML =
+      `<div class="timeline-date">📅 ${d.date}</div>` +
+      `<div class="timeline-content">${escapeHtml(d.content)}</div>` +
+      `<button class="timeline-delete" data-action="delete-diary" data-id="${d.id}" title="删除">🗑️</button>`;
+    frag.appendChild(div);
+  });
+
+  timeline.appendChild(frag);
+  diaryRendered += slice.length;
+
+  const wrap = $('#diaryLoadMoreWrap');
+  if (diaryRendered < sorted.length) {
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* Event delegation for timeline */
+function onTimelineClick(e) {
+  const delBtn = e.target.closest('[data-action="delete-diary"]');
+  if (!delBtn) return;
+  const id = delBtn.getAttribute('data-id');
+  allDiaries = allDiaries.filter(d => d.id !== id);
+  saveAllDiaries();
+  renderDiaryPage(true);
+  showToast('日记已删除');
+}
+
+function addDiary() {
+  const dateVal = $('#diaryDate').value.trim();
+  const contentVal = $('#diaryContent').value.trim();
+  if (!dateVal) { showToast('请选择一个日期 📅'); return; }
+  if (!contentVal) { showToast('请写下你想说的话 💌'); return; }
+  allDiaries.unshift({ id: genId(), date: dateVal, content: contentVal, createdAt: new Date().toISOString() });
+  saveAllDiaries();
+  renderDiaryPage(true);
+  $('#diaryDate').value = '';
+  $('#diaryContent').value = '';
+  showToast('日记已记录 💕');
+}
+
+/* ========== Toast (debounced hide) ========== */
+let toastTimer;
+function showToast(msg) {
+  const toast = $('#toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+/* ========== Floating Hearts (reduced to 6) ========== */
+function createFloatingHearts() {
+  const container = $('#heartsContainer');
+  const hearts = ['💕','💖','💗','💝','💘','❤️'];
+  const count = 6;
+
+  for (let i = 0; i < count; i++) {
+    const span = document.createElement('span');
+    span.className = 'heart-float';
+    span.textContent = hearts[i % hearts.length];
+    span.style.left = (5 + Math.random() * 90) + '%';
+    span.style.animationDuration = (9 + Math.random() * 14) + 's';
+    span.style.animationDelay = (Math.random() * 12) + 's';
+    span.style.fontSize = (16 + Math.random() * 22) + 'px';
+    span.addEventListener('animationiteration', () => {
+      span.style.left = (5 + Math.random() * 90) + '%';
+      span.style.animationDuration = (9 + Math.random() * 14) + 's';
+    }, { passive: true });
+    container.appendChild(span);
+  }
+}
+
+/* ========== Love Counter (rAF-based) ========== */
+function updateLoveDays() {
+  const el = $('#loveDays');
+  if (!el) return;
+  const start = new Date(loveStartDate);
+  const now = new Date();
+  const target = Math.max(0, Math.floor((now - start) / 86400000));
+  // Simple direct set if within 1 of current (avoid animation when unnecessary)
+  const current = parseInt(el.textContent) || 0;
+  if (Math.abs(target - current) <= 1) {
+    el.textContent = target;
+    return;
+  }
+  animateNumber(el, current, target);
+}
+
+function animateNumber(el, from, to) {
+  const dir = to > from ? 1 : -1;
+  const range = Math.abs(to - from);
+  const step = Math.max(1, Math.ceil(range / 40));
+  let val = from;
+  const tick = () => {
+    val += step * dir;
+    if ((dir > 0 && val >= to) || (dir < 0 && val <= to)) {
+      el.textContent = to;
+      return;
+    }
+    el.textContent = val;
+    numAnimRafId = requestAnimationFrame(tick);
+  };
+  if (numAnimRafId) cancelAnimationFrame(numAnimRafId);
+  numAnimRafId = requestAnimationFrame(tick);
+}
+let numAnimRafId = null;
+
+/* ========== Music ========== */
+let musicPlaying = false;
+let bgMusic = null;
+
+function initMusic() {
+  // Lazy-create audio on first interaction
+  const btn = $('#musicBtn');
+  btn.addEventListener('click', () => {
+    if (!bgMusic) {
+      bgMusic = new Audio('img1/1.mp3');
+      bgMusic.loop = true;
+      bgMusic.preload = 'none';
+    }
+    if (musicPlaying) {
+      bgMusic.pause();
+      btn.classList.remove('playing');
+      btn.textContent = '🎵';
+      musicPlaying = false;
+    } else {
+      bgMusic.play().catch(() => {});
+      btn.classList.add('playing');
+      btn.textContent = '🎶';
+      musicPlaying = true;
+    }
+  }, { passive: false });
+}
+
+/* ========== Bind Events (use delegation to minimize listeners) ========== */
+function bindEvents() {
+  // Photo upload
+  $('#uploadArea').addEventListener('click', (e) => {
+    if (!e.target.closest('#photoInput')) $('#photoInput').click();
+  });
+  $('#photoInput').addEventListener('change', (e) => {
+    handlePhotoUpload(e.target.files);
+    e.target.value = '';
+  });
+
+  // Drag & drop
+  const ua = $('#uploadArea');
+  ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('drag-over'); }, { passive: false });
+  ua.addEventListener('dragleave', () => ua.classList.remove('drag-over'), { passive: true });
+  ua.addEventListener('drop', e => {
+    e.preventDefault();
+    ua.classList.remove('drag-over');
+    handlePhotoUpload(e.dataTransfer.files);
+  }, { passive: false });
+
+  // Photo grid - event delegation (single listener!)
+  $('#photoGrid').addEventListener('click', onPhotoGridClick);
+
+  // Load more photos
+  $('#loadMoreBtn').addEventListener('click', () => renderPhotoPage(false));
+
+  // Lightbox
+  $('#lightboxClose').addEventListener('click', closeLightbox);
+  $('#lightbox').addEventListener('click', (e) => {
+    if (e.target === $('#lightbox')) closeLightbox();
+  });
+  $('#lightboxPrev').addEventListener('click', (e) => { e.stopPropagation(); lightboxNav(-1); });
+  $('#lightboxNext').addEventListener('click', (e) => { e.stopPropagation(); lightboxNav(1); });
+
+  // Keyboard nav
+  document.addEventListener('keydown', (e) => {
+    if (!$('#lightbox').classList.contains('active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') { e.preventDefault(); lightboxNav(-1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); lightboxNav(1); }
+  }, { passive: false });
+
+  // Diary
+  $('#diarySubmit').addEventListener('click', addDiary);
+  $('#diaryContent').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); addDiary(); }
+  });
+  $('#timeline').addEventListener('click', onTimelineClick);
+  $('#diaryLoadMoreBtn').addEventListener('click', () => renderDiaryPage(false));
+
+  // Default date = today
+  $('#diaryDate').value = new Date().toISOString().split('T')[0];
+
+  // Love date edit
+  $('#loveDays').addEventListener('click', () => {
+    const newDate = prompt('设置恋爱开始日期 (YYYY-MM-DD)：', loveStartDate);
+    if (newDate && /^\d{4}-\d{2}-\d{2}$/.test(newDate) && !isNaN(new Date(newDate))) {
+      loveStartDate = newDate;
+      localStorage.setItem(STORAGE_KEY_START, loveStartDate);
+      updateLoveDays();
+      showToast('恋爱日期已更新 💕');
+    }
+  });
+
+  // Touch swipe for lightbox
+  let touchX = 0;
+  const lb = $('#lightbox');
+  lb.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', e => {
+    const diff = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) lightboxNav(diff > 0 ? 1 : -1);
+  }, { passive: true });
+
+  // Music (lazy init)
+  initMusic();
+}
+
+/* ========== Init ========== */
+function init() {
+  // 1. Load data (no DOM yet)
+  loadAllPhotos();
+  loadAllDiaries();
+  initLoveDate();
+  preloadExistingPhotos();
+  preloadDemoDiaries();
+
+  // 2. Render initial pages (batched)
+  renderPhotoPage(true);
+  renderDiaryPage(true);
+
+  // 3. Counter
+  updateLoveDays();
+  setInterval(updateLoveDays, 60000);
+
+  // 4. Lightweight background
+  createFloatingHearts();
+
+  // 5. Bind events last
+  bindEvents();
+}
+
+// Start when DOM is ready (but don't block paint)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init, { once: true });
+} else {
+  init();
+}
+
+})();
+</script>
+</body>
+</html>
